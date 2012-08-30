@@ -1,0 +1,199 @@
+#!/usr/bin/env python
+import fcntl
+import logging
+import json
+import optparse
+import sys
+import time
+import traceback
+
+from twisted.internet import reactor
+
+# Local project
+import common
+
+logger = logging.getLogger('password_db')
+logger.addHandler(logging.StreamHandler(sys.stderr))
+
+
+class PrimaryProcessor(common.PayloadProcessor):
+    def __init__(self, request, chunk_servers):
+        super(PrimaryProcessor, self).__init__(request)
+        self.chunk_servers = chunk_servers
+
+    def process(self, data):
+        Shield.registerLocker()
+
+        password = self.getArg(data, 'password')
+        webhooks = self.getArg(data, 'webhooks')
+
+        self.start_time = time.time()
+
+        self.remaining_chunk_servers = self.chunk_servers[:]
+        self.remaining_chunks = self.chunkPassword(password)
+
+        self.webhooks = [common.parseHost(webhook) for webhook in webhooks]
+
+        self.checkNext()
+
+    def checkNext(self):
+        assert(len(self.remaining_chunks) == len(self.remaining_chunk_servers))
+
+        if not self.remaining_chunk_servers:
+            self.sendResult(True)
+            return
+
+        next_chunk_server = self.remaining_chunk_servers.pop(0)
+        next_chunk = self.remaining_chunks.pop(0)
+
+        self.log_info('Making request to chunk server %r'
+                      ' (remaining chunk servers: %r)' %
+                      (next_chunk_server, self.remaining_chunk_servers))
+
+        common.makeRequest(next_chunk_server,
+                           {'password_chunk' : next_chunk},
+                           self.nextServerCallback,
+                           self.nextServerErrback)
+
+    def nextServerCallback(self, data):
+        parsed_data = json.loads(data)
+        # Chunk was wrong!
+        if not parsed_data['success']:
+            # Defend against timing attacks
+            remaining_time = self.expectedRemainingTime()
+            self.log_info('Going to wait %s seconds before responding' %
+                          remaining_time)
+            reactor.callLater(remaining_time, self.sendResult, False)
+            return
+
+        self.checkNext()
+
+    def expectedRemainingTime(self):
+        assert(len(self.chunk_servers) > len(self.remaining_chunk_servers))
+        elapsed_time = time.time() - self.start_time
+        ratio_remaining_to_elapsed = (len(self.remaining_chunk_servers) * 1.0
+            / (len(self.chunk_servers) - len(self.remaining_chunk_servers)))
+        return ratio_remaining_to_elapsed * elapsed_time
+
+    def nextServerErrback(self, address_spec, error):
+        backtrace = traceback.format_exc(error)
+        self.log_error('Error while connecting to chunk server %r: %s (%r)' %
+                       (address_spec, error, backtrace))
+        self.respondWithMessage('Error! This should never happen in '
+                                'production, but it seems that it did. Contact'
+                                ' us at ctf@stripe.com to let us know.')
+
+    def sendResult(self, success):
+        result = {'success': success}
+        self.respond(result)
+        for webhook in self.webhooks:
+            self.sendWebhook(webhook, result)
+
+    def sendWebhook(self, webhook_host_spec, result):
+        self.log_info('Sending webhook to %r: %s' %
+                      (webhook_host_spec, result))
+        common.makeRequest(webhook_host_spec, result, self.sendWebhookCallback,
+                           self.sendWebhookErrback)
+
+    def sendWebhookCallback(self, data):
+        # Too late to do anything here
+        pass
+
+    def sendWebhookErrback(self, address_spec, error):
+        backtrace = traceback.format_exc(error)
+        self.log_error('Error while connecting to webhook server %r: %s (%r)' %
+                       (address_spec, error, backtrace))
+
+    def chunkPassword(self, password):
+        return common.chunkPassword(len(self.chunk_servers), password, self)
+
+class Shield(object):
+    # Ensure equitable distribution of load among many PasswordDB
+    # instances on a single server. (Typically servers come with many
+    # PasswordDB instances.)
+    @classmethod
+    def registerLocker(self):
+        if self.has_lock:
+            return
+
+        self.acquireLock()
+        reactor.callLater(self.lock_period, self.releaseLock)
+
+    @classmethod
+    def acquireLock(self):
+        logger.info('Acquiring lock')
+        fcntl.flock(self.lockfile, fcntl.LOCK_EX)
+        self.has_lock = True
+
+    @classmethod
+    def releaseLock(self):
+        logger.info('Releasing lock')
+        fcntl.flock(self.lockfile, fcntl.LOCK_UN)
+        self.has_lock = False
+
+    @classmethod
+    def openLockfile(self, path):
+        self.lock_period = 0.250
+        self.has_lock = False
+        self.lockfile = open(path, 'w')
+
+def main():
+    usage = """
+%prog -c CHUNK_SERVER [-c CHUNK_SERVER ...] [-q ...] -l /path/to/lockfile PRIMARY_SERVER
+
+CHUNK_SERVER:
+    A chunk server to spin up as <chunk_host:chunk_port>
+
+PRIMARY_SERVER:
+    Either pass a host:port pair <primary_host:primary_port> or pass a
+    unix:-prefixed path for it to listen on a UNIX socket
+    <unix:/path/to/socket> (useful for running under FastCGI).
+"""
+    parser = optparse.OptionParser(usage)
+    parser.add_option('-q', '--quiet', help='Quietness of debugging output.',
+                      dest='quiet', action='count', default=0)
+    parser.add_option('-c', '--chunk-servers',
+                      help='Add a chunk server to spin up',
+                      dest='chunk_servers', action='append', default=[])
+    parser.add_option('-l', '--lock-file',
+                      help='Path to lockfile',
+                      dest='lockfile')
+    opts, args = parser.parse_args()
+    if not opts.quiet:
+        logger.setLevel(logging.DEBUG)
+    elif opts.quiet == 1:
+        logger.setLevel(logging.INFO)
+    elif opts.quiet >= 2:
+        logger.setLevel(logging.WARN)
+
+    if len(args) != 1:
+        parser.print_usage()
+        return 1
+
+    if not opts.chunk_servers:
+        parser.print_usage()
+        return 1
+
+    if not opts.lockfile:
+        parser.print_usage()
+        return 1
+
+    Shield.openLockfile(opts.lockfile)
+
+    chunk_servers = [common.parseHost(spec) for spec in opts.chunk_servers]
+
+    server = common.HTTPServer(PrimaryProcessor, chunk_servers)
+
+    spec = args[0]
+    if common.isUnix(spec):
+        path = common.parseUnix(spec)
+        common.listenUNIX(path, server)
+    else:
+        address_spec = common.parseHost(args[0])
+        common.listenTCP(address_spec, server)
+
+    reactor.run()
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())

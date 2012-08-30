@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WaffleCopter - Login</title>
+  </head>
+  <body>
+    <h1>WaffleCopter [beta]</h1>
+    {% if error %}
+    <p style="color: red">{{ error }}</p>
+    {% endif %}
+    <form action="./login" method="post">
+      <table>
+        <tr>
+          <td>username:</td><td><input type="text" name="username" /></td>
+        </tr>
+        <tr>
+          <td>password:</td><td><input type="password" name="password" /></td>
+        </tr>
+        <tr>
+          <td colspan=2><input type="submit" value="log in" /></td>
+        </tr>
+      </table>
+    </form>
+  </body>
+</html>

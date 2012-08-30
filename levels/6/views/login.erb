@@ -1,0 +1,25 @@
+<div class='row'>
+  <div class='span12'>
+    <h3>Login</h3>
+
+    <br />
+
+    <p>
+      Sign into your Streamer account, and instantly start sharing updates
+      with your friends. If you don't have an account yet,
+      <a href='<%= absolute_url ("/register") %>'>create one now</a>!
+    </p>
+
+    <br />
+
+    <form class='form-inline' action='<%= absolute_url("/login") %>'
+          method='post'>
+      <%= csrf_tag %>
+      <input class='input-medium' name='username' type='text'
+             placeholder='Username'/>
+      <input class='input-medium' name='password' type='password'
+             placeholder='Password'/>
+      <input class='btn btn-primary' type='submit' value='Sign In'/>
+    </form>
+  </div>
+</div>

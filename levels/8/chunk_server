@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+import logging
+import optparse
+import sys
+
+from twisted.internet import reactor
+
+# Local project
+import common
+
+logger = logging.getLogger('password_db')
+logger.addHandler(logging.StreamHandler(sys.stderr))
+
+class ChunkProcessor(common.PayloadProcessor):
+    def __init__(self, request, password_chunk):
+        super(ChunkProcessor, self).__init__(request)
+        self.password_chunk = password_chunk
+
+    def process(self, data):
+        chunk = self.getArg(data, 'password_chunk')
+        success = chunk == self.password_chunk
+        self.respond({
+                'success' : success
+                })
+
+def main():
+    usage = """%prog [-q ...] <host:port> <password_chunk>"""
+    parser = optparse.OptionParser(usage)
+    parser.add_option('-q', '--quiet', help='Quietness of debugging output.',
+                      dest='quiet', action='count', default=0)
+    opts, args = parser.parse_args()
+    if not opts.quiet:
+        logger.setLevel(logging.DEBUG)
+    elif opts.quiet == 1:
+        logger.setLevel(logging.INFO)
+    elif opts.quiet >= 2:
+        logger.setLevel(logging.WARN)
+
+    if len(args) != 2:
+        parser.print_usage()
+        return 1
+
+    address_spec = common.parseHost(args[0])
+    password_chunk = args[1]
+
+    server = common.HTTPServer(ChunkProcessor, password_chunk)
+    common.listenTCP(address_spec, server)
+    reactor.run()
+
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())

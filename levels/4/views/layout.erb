@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Karma Trader</title>
+    <script type="text/javascript"
+            src="<%= absolute_url('/js/jquery-1.8.0.min.js') %>"></script>
+  </head>
+  <body>
+<% if @error %>
+  <p>Error: <%= @error %></p>
+<% end %>
+<% if @success %>
+  <p>Success: <%= @success %></p>
+<% end %>
+
+<%= yield %>
+  </body>
+</html>

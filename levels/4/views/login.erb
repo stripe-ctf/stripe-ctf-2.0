@@ -1,0 +1,16 @@
+<h1>
+  Welcome to Karma Trader, the best way to reward people for good deeds!
+</h1>
+
+<h3>Login</h3>
+
+<form action="<%= absolute_url('/login') %>" method="POST">
+  <p>Username: <input type="text" name="username" /></p>
+  <p>Password: <input type="password" name="password" /></p>
+  <p><input type="submit" value="Log in" /></p>
+</form>
+
+<p>
+  Don't have an account?
+  <a href="<%= absolute_url('/register') %>">Register</a> now!
+</p>

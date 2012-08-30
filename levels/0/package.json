@@ -1,0 +1,19 @@
+{
+  "author": "Greg Brockman <gdb@stripe.com>",
+  "name": "level00",
+  "description": "Level 0 of CTF",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stripe-internal/web-ctf.git"
+  },
+  "engines": {
+    "node": "~v0.4.9"
+  },
+  "dependencies": {
+    "express": "",
+    "sqlite3": "2.1.5",
+    "mu2": ""
+  },
+  "devDependencies": {}
+}

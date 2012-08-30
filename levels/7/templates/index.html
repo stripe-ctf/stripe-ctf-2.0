@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WaffleCopter</title>
+    <style>
+      a {
+        color: black;
+      }
+      a:hover {
+        color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WaffleCopter [beta]</h1>
+    <p>Welcome, {{user['name']}}!</p>
+    <h3>Your API credentials</h3>
+    <ul>
+      <li><strong>endpoint:</strong> <code>{{ endpoint }}</code></li>
+      <li><strong>user_id:</strong> <code>{{ user['id'] }}</code></li>
+      <li><strong>secret:</strong> <code>{{ user['secret'] }}</code></li>
+    </ul>
+    <h3>Available waffles</h3>
+    <ul>
+      {% for waffle in waffles %}
+      <li>
+        {{ waffle['name'] }}{% if waffle['premium'] %} (premium){% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    <h3><a href="./logs/{{ user['id'] }}">API Request logs</a></h3>
+  </body>
+</html>

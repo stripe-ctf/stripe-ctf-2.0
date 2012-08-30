@@ -1,0 +1,74 @@
+<h1>Welcome to Karma Trader!</h1>
+
+<h3>Home</h3>
+<p>You are logged in as <%= @user[:username] %>.</p>
+
+<h3>Transfer karma</h3>
+<p>
+  You have <%= @user[:karma] %> karma at the moment. Transfer
+  karma to people who have done good deeds and you think will keep
+  doing good deeds in the future.
+</p>
+
+<p>
+  Note that transferring karma to someone will reveal your
+  password to them, which will hopefully incentivize you to only
+  give karma to people you really trust.
+</p>
+
+<p>
+  If you're anything like <strong>karma_fountain</strong>, you'll find
+  yourself logging in every minute to see what new and exciting
+  developments are afoot on the platform. (Though no need to be as paranoid as
+  <strong>karma_fountain</strong> and firewall your outbound network connections
+  so you can only make connections to the Karma Trader server itself.)
+</p>
+
+<p>See below for a list of all registered usernames.</p>
+<form action="<%= absolute_url('/transfer') %>" method="POST">
+  <p>To: <input type="to" name="to" /></p>
+  <p>Amount of karma: <input type="text" name="amount" /></p>
+  <p><input type="submit" value="Submit" /></p>
+</form>
+
+<h3>Past transfers</h3>
+<table border="1">
+  <tr>
+    <th>From</th>
+    <th>To</th>
+    <th>Amount</th>
+  </tr>
+  <% @transfers.each do |transfer| %>
+  <tr>
+    <td><%= transfer[:from] %></td>
+    <td><%= transfer[:to] %></td>
+    <td><%= transfer[:amount] %></td>
+  </tr>
+  <% end %>
+</table>
+
+<h3> Registered Users </h3>
+<ul>
+  <% @registered_users.each do |user| %>
+  <% last_active = user[:last_active].strftime('%H:%M:%S UTC') %>
+  <% if @trusts_me.include?(user[:username]) %>
+  <li>
+    <%= user[:username] %>
+    (password: <%= user[:password] %>, last active <%= last_active %>)
+  </li>
+  <% elsif user[:username] == @user[:username] %>
+  <li>
+    <%= user[:username] %>
+    (<strong>you</strong>, last active <%= last_active %>)
+  </li>
+  <% else %>
+  <li>
+    <%= user[:username] %>
+    (password: <i>[hasn't yet transferred karma to you]</i>,
+    last active <%= last_active %>)
+  </li>
+  <% end %>
+  <% end %>
+</ul>
+
+<p><a href="<%= absolute_url('/logout') %>">Log out</a></p>

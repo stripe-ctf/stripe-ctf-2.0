@@ -1,0 +1,63 @@
+<html>
+  <head>
+    <title>Secret Safe</title>
+  </head>
+  <body>
+    {{#namespace}}
+    <div style="border-width: 2px; border-style: outset; padding: 5px">
+      Showing secrets for <strong>{{namespace}}</strong>:
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#secrets}}
+          <tr>
+            <td>{{ key }}</td>
+            <td>{{ secret }}</td>
+          </tr>
+          {{/secrets}}
+          {{^secrets}}
+          <tr>
+            <td span="2">
+              You have no secrets stored with us. Try using the form below.
+            </td>
+          </tr>
+          {{/secrets}}
+        </tbody>
+      </table>
+
+      <hr />
+    </div>
+    {{/namespace}}
+
+    <form action="" method="POST">
+      <p>
+        <label for="namespace">Namespace:</label>
+        <input type="text" name="namespace" id="namespace"
+            value="{{ namespace }}" />
+      </p>
+      <p>
+        <label for="secret_name">Name of your secret:</label>
+        <input type="text" name="secret_name" id="secret_name">
+      </p>
+      <p>
+        <label for="secret_value">Your secret:</label>
+        <input type="password" name="secret_value" id="secret_value">
+      </p>
+      <p>
+        <input type="submit" value="Store my secret!" />
+      </p>
+    </form>
+    <form action="" method="GET">
+      <label for="change_namespace">
+        Want to retrieve your secrets? View secrets for:
+      </label>
+      <input name="namespace" id="change_namespace" />
+      <input type="submit" value="View" />
+    </form>
+  </body>
+</html>

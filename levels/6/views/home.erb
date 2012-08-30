@@ -1,0 +1,106 @@
+<div class='row'>
+  <div class='span9'>
+    <h3>Stream of Posts</h3>
+
+    <table id='posts' class='table table-bordered table-condensed'>
+      <tbody>
+      </tbody>
+    </table>
+
+    <script>
+      var username = "<%= @username %>";
+      var post_data = <%= @posts.to_json %>;
+
+      function escapeHTML(val) {
+        return $('<div/>').text(val).html();
+      }
+      function addPost(item) {
+        var new_element = '<tr><th>' + escapeHTML(item['user']) +
+            '</th><td><h4>' + escapeHTML(item['title']) + '</h4>' +
+            escapeHTML(item['body']) + '</td></tr>';
+        $('#posts > tbody:last').prepend(new_element);
+      }
+
+      for(var i = 0; i < post_data.length; i++) {
+        var item = post_data[i];
+        addPost(item);
+      };
+    </script>
+
+    <form id='new_post' name='new_post' action='<%= absolute_url("/posts") %>'
+          method='POST'>
+      <%= csrf_tag %>
+      <fieldset>
+        <div class='control-group'>
+          <label class='control-label' for='title'>Title:</label>
+          <div class='controls'>
+            <input class='input-medium' name='title' id='title' type='text'/>
+          </div>
+        </div>
+        <div class='control-group'>
+          <label class='control-label' for='content'>Content:</label>
+          <div class='controls'>
+            <textarea class='input-xlarge' name='body' id='content'
+              type='text'>Your post here...</textarea>
+          </div>
+        </div>
+        <div class='form-actions'>
+          <input class='btn btn-primary' type='submit' value='Post'/>
+        </div>
+        <div id='status' name='status' class="alert alert-info">
+          Ready and waiting!
+        </div>
+      </fieldset>
+    </form>
+
+    <script>
+      $(document).ready(function() {
+        $('#new_post').submit(function(e) {
+          var new_post_data = {
+            title: $("#title").val(),
+            body: $("#content").val(),
+            <%= csrf_field %>: "<%= csrf_token %>"
+          };
+          $.post('<%= absolute_url("/ajax/posts") %>',
+                 new_post_data,
+                 function(data) {
+            var status_text = $.parseJSON(data);
+            $('#status').html(status_text['response']);
+
+            new_post_data['user'] = username;
+            addPost(new_post_data);
+          });
+
+          e.preventDefault();
+          return false;
+        });
+      });
+    </script>
+  </div>
+  <div class='span3'>
+    <h3>Users Online</h3>
+    <table class='table table-condensed'>
+      <% @registered_users.each do |user| %>
+        <tr>
+          <td>
+            <% if @username == user[:username] %>
+              <em>
+                <a href='<%= absolute_url("/user_info") %>' target='_blank'>
+                  <%=h user[:username] %> (me)i
+                </a>
+              </em>
+            <% else %>
+              <%=h user[:username] %>
+            <% end %>
+
+            <br />
+
+            <span style="font-size:10px">
+              Last active: <%= user[:last_active].strftime('%H:%M:%S UTC') %>
+            </span>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+</div>

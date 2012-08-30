@@ -1,0 +1,14 @@
+# Run
+
+- Run password_db_launcher. For example:
+
+    ./password_db_launcher 123456789012 127.0.0.1:3000
+
+  will start a PasswordDB instance running on 127.0.0.1:3000 and with
+  the Flag set to 123456789012
+
+- Make sure you're using Twisted 11.1.0
+
+- Connect using curl:
+
+    curl 127.0.0.1:3000 -d '{"password": 123456789012, "webhooks": []}'

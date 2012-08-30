@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Streamer</title>
+    <script src='<%= absolute_url('/js/jquery-1.8.0.min.js') %>'></script>
+    <link rel='stylesheet' type='text/css'
+          href='<%= absolute_url('/css/bootstrap-combined.min.css') %>' />
+  </head>
+  <body>
+    <div class='navbar'>
+      <div class='navbar-inner'>
+        <div class='container'>
+          <a class='brand' href='<%= absolute_url("/") %>'>Streamer</a>
+          <% if @user %>
+            <ul class='nav pull-right'>
+              <li><a href='<%= absolute_url("/logout") %>'>Log Out</a></li>
+            </ul>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    <div class='container'>
+<% if @error %>
+  <p>Error: <%= @error %></p>
+<% end %>
+<% if @success %>
+  <p>Success: <%= @success %></p>
+<% end %>
+
+      <%= yield %>
+    </div>
+  </body>
+</html>

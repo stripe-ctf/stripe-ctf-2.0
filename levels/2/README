@@ -1,0 +1,4 @@
+# To run
+
+- Put index.php on a server somewhere with password.txt file in the
+  same directory.

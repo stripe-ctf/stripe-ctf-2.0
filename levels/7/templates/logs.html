@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WaffleCopter - Logs</title>
+    <style type="text/css">
+      table#logs {
+        border-collapse: collapse;
+      }
+      #logs td,th {
+        border: 1px solid #CCC;
+        padding: 5px;
+      }
+      #home {
+        text-decoration: none;
+        color: #000;
+      }
+      #home:hover {
+        color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <h1><a id=home href="../">WaffleCopter [beta]</a></h1>
+    <h3>API Request Logs</h3>
+    <table id=logs>
+      <tr><th>date</th><th>path</th><th>body</th></tr>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log['date'].strftime('%F %R:%S') }}</td>
+        <td>{{ log['path'] }}</td>
+        <td><code>{{ log['body'].encode('unicode-escape') }}</code></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>
