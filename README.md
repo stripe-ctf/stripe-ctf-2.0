@@ -6,5 +6,5 @@ This repository contains the source code to the levels from the Stripe CTF 2.0,
 which ran from August 22-29, 2012.
 
 https://stripe.com/blog/capture-the-flag-20
-https://stripe.com/blog/capturetheflag
 
+https://stripe.com/blog/capturetheflag
