@@ -26,4 +26,4 @@ server to the Level 2 server.*
 
 - Install bundler: `gem install bundler`
 - Run srv.rb: `./srv.rb`
-- Point your browser to http://localhost:4567
+- Point your browser to [http://localhost:4567](http://localhost:4567)
