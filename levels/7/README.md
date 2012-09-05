@@ -1,8 +1,11 @@
 # WaffleCopter
 
-WaffleCopter delivers hot waffles fresh off the iron straight to your location
-using quad-rotor GPS-enabled helicopters. The service is currently being tested
-in private beta in select locations.
+WaffleCopter is a new service delivering locally-sourced organic waffles hot
+off of vintage waffle irons straight to your location using quad-rotor
+GPS-enabled helicopters. The service is modeled after
+[TacoCopter](http://tacocopter.com), an innovative and highly successful early
+contender in the airborne food delivery industry. WaffleCopter is currently
+being tested in private beta in select locations.
 
 Your goal is to order one of the decadent Liège waffles, offered only to the
 first premium subscribers of the service.
